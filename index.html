@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>A smol gift for Zahra — my pretty baby</title>
+<style>
+  :root{
+    --bg:#fff7fb;
+    --card:#fff0f6;
+    --accent:#ff4d94;
+    --text:#3b0b17;
+    --kitty-pink:#ff6ea1;
+    --kitty-deep:#ff3b7b;
+    --max-width:360px;
+  }
+
+  /* Basic layout */
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,var(--bg) 0%, #fff0f6 100%);
+    padding:20px;
+    box-sizing:border-box;
+  }
+  .scene{width:100%;max-width:var(--max-width);text-align:center;}
+
+  h1{margin:0 0 8px;font-size:18px;color:var(--kitty-deep);letter-spacing:0.2px;}
+  p.lead{margin:0 0 14px;color:#6a2230;font-size:13px;}
+
+  /* Envelope responsive sizing using aspect-ratio */
+  .envelope-wrap{display:flex;align-items:center;justify-content:center;}
+  .envelope{
+    --env-w: min(360px, 92vw);
+    width:var(--env-w);
+    aspect-ratio: 16 / 10;
+    position:relative;
+    perspective:900px;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .envelope .body{
+    width:100%;height:100%;
+    background:linear-gradient(180deg,#ffffff 0%, #fff6fb 100%);
+    border-radius:12px;
+    border:2px solid rgba(255,77,148,0.12);
+    box-shadow: 0 14px 36px rgba(107,33,58,0.10);
+    position:relative;
+    overflow:hidden;
+  }
+  .envelope .flap{
+    position:absolute;
+    top:0;left:0;right:0;height:60%;
+    background:linear-gradient(180deg,#ffe9f3 0%, #ffd6ea 100%);
+    transform-origin: top center;
+    transform: rotateX(0deg);
+    border-bottom:2px solid rgba(255,77,148,0.14);
+    transition: transform 700ms cubic-bezier(.2,.9,.25,1);
+    z-index:4;
+  }
+  .flap:before{
+    content:"";
+    width:0;height:0;
+    border-left:50% solid transparent;
+    border-right:50% solid transparent;
+    border-bottom:calc(var(--env-w) * 0.12) solid rgba(255,77,148,0.06);
+    position:absolute;
+    top:calc(var(--env-w) * 0.05);
+  }
+
+  .card{
+    position:absolute;
+    left:4%;
+    right:4%;
+    top:30%;
+    height:62%;
+    background:linear-gradient(180deg,var(--card), #ffeef8);
+    border-radius:12px;
+    box-shadow:0 8px 18px rgba(107,33,58,0.06);
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    transform: translateY(8px) scale(0.99);
+    opacity:0;
+    transition: opacity 420ms ease, transform 420ms ease;
+    z-index:2;
+    box-sizing:border-box;
+  }
+
+  .envelope.open .flap{ transform: rotateX(-180deg); }
+  .envelope.open .card{ opacity:1; transform: translateY(0) scale(1); }
+
+  .message{ color:var(--text); text-align:center; padding:0 6px; line-height:1.35; }
+  .message .line1{ font-weight:800; font-size:16px; color:#75002b; }
+  .message .line2{ font-size:14px; color:#4b232f; margin-top:6px; }
+  .signature{ margin-top:8px; font-style:italic; color:#7b2940; font-size:13px; }
+
+  .choices{ position:relative; width:100%; margin-top:6px; display:flex; gap:10px; align-items:center; justify-content:center; height:auto; padding:6px 4px; box-sizing:border-box; }
+
+  .btn{
+    --h:46px;
+    height:var(--h);
+    min-width:120px;
+    padding:0 16px;
+    border-radius:999px;
+    border:0;
+    font-weight:800;
+    cursor:pointer;
+    box-shadow: 0 8px 18px rgba(107,33,58,0.08);
+    transition: transform 160ms ease, box-shadow 160ms, opacity 250ms;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    font-size:15px;
+    touch-action:manipulation;
+  }
+  #yes{
+    background:linear-gradient(90deg,var(--kitty-pink),var(--kitty-deep));
+    color:white;
+  }
+  #no{
+    background:#fff;
+    color:var(--kitty-deep);
+    border:2px solid rgba(255,77,148,0.12);
+  }
+
+  /* When JavaScript positions absolutely (desktop) we still support mobile fallback */
+  .pos-abs #yes, .pos-abs #no { position:absolute; top:10px; }
+  .pos-abs #yes { left:12%; transform:none; }
+  .pos-abs #no  { right:12%; transform:none; }
+
+  /* runner clone (the button with legs) */
+  .runner{
+    position:fixed;
+    z-index:9999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    padding:8px 14px;
+    font-weight:800;
+    box-shadow:0 12px 26px rgba(0,0,0,0.12);
+    background:#fff;
+    color:var(--kitty-deep);
+    border:2px solid rgba(255,77,148,0.12);
+    will-change: transform, left, top;
+  }
+  .runner .leg{
+    position:absolute;
+    bottom:-8px;
+    width:6px;height:14px;background:rgba(0,0,0,0.18);
+    border-radius:3px;
+  }
+  .runner .leg.left{ left:20%; }
+  .runner .leg.right{ right:20%; }
+
+  /* cat (chaser) - simple SVG wrapper */
+  .cat{ position:fixed; z-index:9998; width:72px; height:72px; transform-origin:center; pointer-events:none; will-change:left,top,transform; }
+
+  /* result overlay and confetti canvas */
+  .overlay{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(11,2,2,0.14); backdrop-filter: blur(2px); opacity:0; pointer-events:none; transition:opacity 260ms; z-index:8000; padding:18px; box-sizing:border-box; }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .result-card{ background:white; padding:20px; border-radius:12px; max-width:720px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(107,33,58,0.18); }
+
+  .confetti-canvas{ position:fixed; left:0; top:0; width:100%; height:100%; z-index:8500; pointer-events:none; }
+
+  /* kitty decorative top-left */
+  .kitty-badge{ position:absolute; left:12px; top:10px; display:flex; align-items:center; gap:8px; z-index:6; user-select:none; }
+  .badge-text{ font-size:12px; color:var(--kitty-deep); font-weight:700; }
+
+  /* Mobile-specific: stack buttons vertically on small widths */
+  @media (max-width:420px){
+    .message .line1{ font-size:15px; }
+    .message .line2{ font-size:14px; }
+    .choices{ flex-direction:column; gap:10px; padding:8px; }
+    .btn{ min-width:160px; width:80%; max-width:240px; --h:52px; font-size:16px; }
+    .cat{ width:64px; height:64px; }
+    .runner{ padding:8px 12px; font-size:14px; }
+  }
+
+  /* Respect user's motion preference */
+  @media (prefers-reduced-motion: reduce){
+    .flap, .card, .runner, .cat, .overlay, .envelope .flap { transition: none !important; animation: none !important; }
+  }
+
+  /* Small accessibility focus styles */
+  .btn:focus{ outline:3px solid rgba(255,110,161,0.18); outline-offset:4px; }
+</style>
+</head>
+<body>
+  <div class="scene" aria-live="polite">
+    <h1>A smol gift for Zahra — my pretty baby</h1>
+    <p class="lead">A little surprise — tap the envelope</p>
+
+    <div class="envelope-wrap">
+      <div class="envelope" id="envelope" role="button" aria-pressed="false" tabindex="0" title="Tap to open">
+        <div class="body" aria-hidden="true"></div>
+        <div class="flap" aria-hidden="true"></div>
+
+        <div class="card" id="card" role="dialog" aria-labelledby="q">
+          <div class="kitty-badge" aria-hidden="true">
+            <!-- generic cute cat face with bow (not copyrighted) -->
+            <svg width="44" height="34" viewBox="0 0 44 34" fill="none" aria-hidden="true" style="display:block">
+              <g transform="translate(0,0)">
+                <circle cx="18" cy="16" r="12" fill="#fff" stroke="#ffd9e6" stroke-width="1.5"/>
+                <path d="M6 2 L12 8" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                <path d="M30 2 L36 8" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="14" cy="16" r="1.8" fill="#222"/>
+                <circle cx="22" cy="16" r="1.8" fill="#222"/>
+                <g transform="translate(28,-2)">
+                  <ellipse cx="6" cy="6" rx="6" ry="4.2" fill="var(--kitty-pink)"/>
+                  <ellipse cx="0" cy="6" rx="4.2" ry="3" fill="var(--kitty-pink)"/>
+                </g>
+              </g>
+            </svg>
+            <div class="badge-text">Hello, Zahra</div>
+          </div>
+
+          <div class="message">
+            <div class="line1">My heart picked this day to be bold.</div>
+            <div id="q" class="line2">Zahra, will you be my Valentine?</div>
+            <div class="signature">— with all my love</div>
+          </div>
+
+          <div class="choices" id="choices" aria-hidden="false">
+            <button id="yes" class="btn" aria-label="Yes, I will be your Valentine">Yes 💖</button>
+            <button id="no" class="btn" aria-label="No, I won't">No 😅</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- confetti canvas -->
+  <canvas id="confetti" class="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- result overlay -->
+  <div class="overlay" id="overlay" role="status" aria-live="polite">
+    <div class="result-card" id="result-card" role="dialog" aria-modal="true">
+      <div id="result-text" style="font-weight:800;font-size:18px;color:#6c0024">You made me the happiest—Yes!</div>
+      <div id="result-sub" style="margin-top:10px;color:#5b2830">I can't wait to make more memories with you.</div>
+      <div style="margin-top:14px">
+        <button id="closeResult" class="btn" style="background:var(--kitty-pink);color:white;border-radius:8px;padding:8px 14px">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const envelope = document.getElementById('envelope');
+  const card = document.getElementById('card');
+  const yes = document.getElementById('yes');
+  const no = document.getElementById('no');
+  const choices = document.getElementById('choices');
+  const overlay = document.getElementById('overlay');
+  const resultText = document.getElementById('result-text');
+  const resultSub = document.getElementById('result-sub');
+  const closeResult = document.getElementById('closeResult');
+  const confettiCanvas = document.getElementById('confetti');
+
+  let open = false;
+  let repelActive = true;
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Helper
+  function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+  function delay(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  // Responsive initial button placement:
+  function placeButtonsInitial(){
+    // On narrow view (mobile), we keep natural flow (stacked via CSS). On larger, position absolutely for playful repel.
+    const isNarrow = window.innerWidth <= 420;
+    if(isNarrow){
+      document.body.classList.remove('pos-abs');
+      // ensure natural positions (reset)
+      yes.style.position = '';
+      no.style.position = '';
+      yes.style.left = '';
+      yes.style.top = '';
+      no.style.left = '';
+      no.style.top = '';
+      return;
+    }
+    // For wider screens, switch to absolute positioning for repel effect
+    document.body.classList.add('pos-abs');
+    yes.style.position='absolute';
+    no.style.position='absolute';
+    const cRect = choices.getBoundingClientRect();
+    const yesRect = yes.getBoundingClientRect();
+    const noRect = no.getBoundingClientRect();
+    const top = 10;
+    // center-left / center-right
+    yes.style.left = `calc(50% - ${yesRect.width + 12}px)`;
+    yes.style.top = top + 'px';
+    no.style.left = `calc(50% + 12px)`;
+    no.style.top = top + 'px';
+  }
+
+  // Open envelope (tap/click)
+  function openEnvelope(){
+    if(open) return;
+    envelope.classList.add('open');
+    envelope.setAttribute('aria-pressed','true');
+    open = true;
+    placeButtonsInitial();
+  }
+
+  // Event bindings
+  envelope.addEventListener('click', openEnvelope);
+  envelope.addEventListener('keyup', (e)=>{ if(e.key === 'Enter' || e.key === ' ') openEnvelope(); });
+
+  window.addEventListener('resize', ()=>{ if(open) placeButtonsInitial(); });
+  window.addEventListener('load', ()=>{ placeButtonsInitial(); });
+
+  // Movement-based repel (mouse + touchmove)
+  function onMove(e){
+    if(!open || !repelActive) return;
+    const isTouch = !!e.touches;
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+    const cardRect = card.getBoundingClientRect();
+    const noRect = no.getBoundingClientRect();
+    const btnX = noRect.left + noRect.width/2;
+    const btnY = noRect.top + noRect.height/2;
+    const dx = clientX - btnX;
+    const dy = clientY - btnY;
+    const dist = Math.hypot(dx,dy);
+    const threshold = 120;
+    if(dist < threshold){
+      const push = (threshold - dist) + 40;
+      let nx = dx / (dist || 1);
+      let ny = dy / (dist || 1);
+      let newCenterX = btnX - nx * push;
+      let newCenterY = btnY - ny * push;
+      const relativeX = newCenterX - cardRect.left - noRect.width/2;
+      const relativeY = newCenterY - cardRect.top - noRect.height/2;
+      const maxLeft = cardRect.width - noRect.width - 12;
+      const maxTop = cardRect.height - noRect.height - 12;
+      const clampedLeft = clamp(relativeX, 8, Math.max(8, maxLeft));
+      const clampedTop = clamp(relativeY, 8, Math.max(8, maxTop));
+      no.style.left = clampedLeft + 'px';
+      no.style.top = clampedTop + 'px';
+    }
+  }
+
+  card.addEventListener('mousemove', onMove);
+  card.addEventListener('touchmove', onMove, {passive:true});
+
+  // If No receives keyboard focus, nudge it
+  no.addEventListener('focus', ()=>{
+    if(!open || !repelActive) return;
+    const cardRect = card.getBoundingClientRect();
+    const noRect = no.getBoundingClientRect();
+    const randX = Math.random() * (cardRect.width - noRect.width - 24) + 8;
+    const randY = Math.random() * (cardRect.height - noRect.height - 24) + 8;
+    no.style.left = randX + 'px';
+    no.style.top = randY + 'px';
+  });
+
+  // YES -> confetti + final message
+  yes.addEventListener('click', async ()=>{
+    repelActive = false;
+    yes.setAttribute('disabled','');
+    no.setAttribute('disabled','');
+    await playConfettiAndShowMessage();
+    yes.removeAttribute('disabled');
+    no.removeAttribute('disabled');
+  });
+
+  // NO click / touch: on narrow screens, direct tap triggers the chase immediately.
+  no.addEventListener('click', (ev)=>{
+    ev.preventDefault();
+    if(!open) return;
+    // prefer immediate chase on touch devices; also works on desktop if clicked
+    repelActive = false;
+    runCatChaseSequence();
+  });
+  // support touchstart to immediately trigger on phones if user taps quickly
+  no.addEventListener('touchstart', (ev)=>{
+    // prevent double triggers; treat like a click
+    ev.preventDefault();
+    if(!open) return;
+    repelActive = false;
+    runCatChaseSequence();
+  }, {passive:false});
+
+  // close overlay
+  closeResult.addEventListener('click', ()=>{
+    overlay.classList.remove('show');
+    repelActive = true;
+  });
+
+  // --- Animated cat + runner sequence (No runs away) ---
+  function createCatElement(){
+    const div = document.createElement('div');
+    div.className = 'cat';
+    div.innerHTML = `
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g>
+          <circle cx="60" cy="62" r="36" fill="#fff" stroke="#ffdce6" stroke-width="3"/>
+          <path d="M28 26 L44 44" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <path d="M92 26 L76 44" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="50" cy="62" r="4" fill="#222"/>
+          <circle cx="70" cy="62" r="4" fill="#222"/>
+          <path d="M46 72 q14 10 28 0" stroke="#f3c7d7" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M36 64 h-12" stroke="#d7bfd0" stroke-width="2" stroke-linecap="round"/>
+          <path d="M84 64 h12" stroke="#d7bfd0" stroke-width="2" stroke-linecap="round"/>
+          <g transform="translate(78,36)">
+            <ellipse cx="8" cy="6" rx="8" ry="6" fill="${getComputedStyle(document.documentElement).getPropertyValue('--kitty-pink') || '#ff6ea1'}"/>
+            <ellipse cx="-6" cy="6" rx="6" ry="4" fill="${getComputedStyle(document.documentElement).getPropertyValue('--kitty-pink') || '#ff6ea1'}"/>
+          </g>
+        </g>
+      </svg>
+    `;
+    document.body.appendChild(div);
+    return div;
+  }
+
+  function createRunnerClone(noEl){
+    const rect = noEl.getBoundingClientRect();
+    const clone = document.createElement('div');
+    clone.className = 'runner';
+    clone.style.left = rect.left + 'px';
+    clone.style.top = rect.top + 'px';
+    clone.style.width = rect.width + 'px';
+    clone.style.height = rect.height + 'px';
+    clone.style.lineHeight = rect.height + 'px';
+    clone.style.padding = window.getComputedStyle(noEl).padding;
+    clone.style.fontSize = window.getComputedStyle(noEl).fontSize;
+    clone.textContent = noEl.textContent;
+    const leftLeg = document.createElement('div'); leftLeg.className = 'leg left';
+    const rightLeg = document.createElement('div'); rightLeg.className = 'leg right';
+    clone.appendChild(leftLeg); clone.appendChild(rightLeg);
+    document.body.appendChild(clone);
+    return clone;
+  }
+
+  async function runCatChaseSequence(){
+    // temporarily disable further UI
+    no.setAttribute('disabled','');
+    yes.setAttribute('disabled','');
+
+    const noRect = no.getBoundingClientRect();
+    const startX = -140;
+    const cat = createCatElement();
+    const catW = cat.getBoundingClientRect().width;
+    const catH = cat.getBoundingClientRect().height;
+    const targetX = noRect.left + noRect.width/2 - catW/2;
+    const targetY = noRect.top + noRect.height/2 - catH/2 + 6;
+
+    // place cat
+    cat.style.left = startX + 'px';
+    cat.style.top = targetY + 'px';
+    if (!prefersReducedMotion){
+      // move cat toward button
+      await animateElement(cat, [
+        { left: startX + 'px', transform: 'translateX(0) scale(0.95)', offset:0 },
+        { left: (targetX - 8) + 'px', transform: 'translateX(0) scale(1.02)', offset:0.85 },
+        { left: (targetX) + 'px', transform: 'translateX(0) scale(0.98)', offset:1 }
+      ], { duration: 700, easing: 'cubic-bezier(.2,.9,.25,1)', fill:'forwards' });
+    } else {
+      // reduced motion: jump cat to position
+      cat.style.left = targetX + 'px';
+    }
+
+    await delay(140);
+
+    // create runner clone, hide original
+    const runner = createRunnerClone(no);
+    no.style.visibility = 'hidden';
+
+    if (!prefersReducedMotion){
+      runner.animate([
+        { transform: 'translateY(0px)' },
+        { transform: 'translateY(-4px)' },
+        { transform: 'translateY(0px)' },
+      ], { duration: 260, iterations: 6, easing: 'ease-in-out' });
+    }
+
+    // compute offscreen X
+    const offX = window.innerWidth + 220;
+    if (!prefersReducedMotion){
+      // run runner off to the right
+      runner.animate([
+        { transform: 'translateX(0) rotate(0deg)' },
+        { transform: `translateX(${(offX - runner.getBoundingClientRect().left)}px) rotate(-12deg)` }
+      ], { duration: 1000, easing: 'cubic-bezier(.3,.7,0,1)', fill:'forwards' });
+
+      await delay(140);
+      const catOffX = offX + 120;
+      cat.animate([
+        { transform: 'translateX(0) scale(1)', left: cat.style.left },
+        { transform: `translateX(${(catOffX - parseFloat(cat.style.left || 0))}px) scale(0.95)` }
+      ], { duration: 1000, easing: 'cubic-bezier(.3,.7,0,1)', fill:'forwards' });
+
+      await delay(1100);
+    }
+    // cleanup
+    try{ runner.remove(); }catch(e){}
+    try{ cat.remove(); }catch(e){}
+    // remove original No
+    no.style.display = 'none';
+
+    // show playful overlay message
+    resultText.textContent = "No ran away! 🐾";
+    resultSub.textContent = "Looks like it's too shy — but I'm still here for you.";
+    overlay.classList.add('show');
+
+    // re-enable yes so they can still say yes
+    yes.removeAttribute('disabled');
+    repelActive = true;
+  }
+
+  function animateElement(el, keyframes, opts){
+    return new Promise((resolve)=>{
+      const anim = el.animate(keyframes, opts);
+      anim.onfinish = ()=> resolve();
+      anim.oncancel = ()=> resolve();
+    });
+  }
+
+  // --- Confetti system for Yes ---
+  function playConfettiAndShowMessage(){
+    return new Promise((resolve)=>{
+      const canvas = confettiCanvas;
+      const ctx = canvas.getContext('2d');
+      const pxRatio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(window.innerWidth * pxRatio));
+      canvas.height = Math.max(1, Math.floor(window.innerHeight * pxRatio));
+      canvas.style.width = window.innerWidth + 'px';
+      canvas.style.height = window.innerHeight + 'px';
+      ctx.setTransform(pxRatio,0,0,pxRatio,0,0); // scale drawing to device pixels
+
+      const colors = ['#ff6ea1','#ff3b7b','#ffd4e6','#ffc2db','#fff2f6','#ffd48f'];
+      const particles = [];
+      const count = 220;
+      for(let i=0;i<count;i++){
+        particles.push({
+          x: window.innerWidth/2 + (Math.random()-0.5) * 200,
+          y: window.innerHeight/3 + (Math.random()-0.5) * 80,
+          w: 6 + Math.random()*10,
+          h: 8 + Math.random()*8,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          rot: Math.random()*360,
+          velX: (Math.random()-0.5)*8,
+          velY: -5 + Math.random()*6,
+          angVel: (Math.random()-0.5)*0.2,
+          gravity: 0.18 + Math.random()*0.18,
+          drag: 0.995,
+          shape: Math.random()>0.5 ? 'rect' : 'circle'
+        });
+      }
+
+      if (prefersReducedMotion){
+        // skip animation and jump to message
+        resultText.style.fontSize = '18px';
+        resultText.textContent = "I love you so much, my gorgeous princess — and I will forever.";
+        resultSub.textContent = "— with all my love";
+        overlay.classList.add('show');
+        resolve();
+        return;
+      }
+
+      let running = true;
+      const duration = 4200;
+      const start = performance.now();
+
+      function frame(now){
+        const t = now - start;
+        ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+        for(let p of particles){
+          p.x += p.velX;
+          p.y += p.velY;
+          p.velY += p.gravity;
+          p.velX *= p.drag;
+          p.rot += p.angVel;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          if(p.shape === 'rect'){
+            ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+          } else {
+            ctx.beginPath();
+            ctx.ellipse(0,0,p.w/2,p.h/2,0,0,Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        if(t < duration && running){
+          requestAnimationFrame(frame);
+        } else {
+          running = false;
+          ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+          // show final romantic message
+          resultText.style.fontSize = '18px';
+          resultText.textContent = "I love you so much, my gorgeous princess — and I will forever.";
+          resultSub.textContent = "— with all my love";
+          overlay.classList.add('show');
+          resolve();
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // Accessibility: keyboard trigger for Yes/No
+  yes.addEventListener('keyup', (e)=>{ if(e.key === 'Enter' || e.key === ' ') yes.click(); });
+  no.addEventListener('keyup', (e)=>{ if(e.key === 'Enter' || e.key === ' ') no.click(); });
+
+  // Keep placements correct after orientation change
+  window.addEventListener('orientationchange', ()=> setTimeout(placeButtonsInitial, 260));
+})();
+</script>
+</body>
+</html>
